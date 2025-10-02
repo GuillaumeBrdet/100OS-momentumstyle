@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "100 School OS - New Tab",
-  "version": "2.2",
-  "description": "Minimal new tab \"100 School OS\" with sidebar icons linking to external resources.",
+  "version": "3.0",
+  "description": "Beautiful new tab page for 100 School with time, tasks, and quick links - inspired by Momentum.",
   
   "chrome_url_overrides": {
     "newtab": "newtab.html"
@@ -20,9 +20,13 @@
     "128": "assets/icons/icon128.png"
   },
   
-  "permissions": [],
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://vdeuzepsaqplhixnhfok.supabase.co/*",
+    "https://cdn.jsdelivr.net/*"
+  ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src https://vdeuzepsaqplhixnhfok.supabase.co https://cdn.jsdelivr.net;"
   },
   
   "homepage_url": "https://www.100school.com/privacy-policy"

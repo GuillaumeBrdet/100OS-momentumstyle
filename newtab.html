@@ -6,201 +6,439 @@
 <title>New Tab — 100 School</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --stage-max: 1600px;
-    --stage-min: 720px;
-    --stage-padding: clamp(20px, 4vw, 60px);
-    --border-radius: 18px;
-    --bg: #f9f8f5;
-    --card-bg: #ffffff;
-    --card-border: rgba(16,15,15,0.06);
-    --card-border-2: rgba(16,15,15,0.03);
-    --icon-bg: #FFE9EB;      /* soft-pink rectangle behind icons */
-    --icon-hover-border: #FE2034; /* thin red border on hover */
-    --icon-size: 56px;
-    --icon-svg-size: 28px;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --text-white: rgba(255, 255, 255, 0.95);
+    --text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
   }
 
-  html,body{height:100%; margin:0; background:var(--bg); font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--text-white);
+    overflow: hidden;
+  }
 
-  /* Layout */
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
   .app {
-    min-height:100vh;
-    display:grid;
-    grid-auto-flow: column;
-    grid-template-columns: auto auto;
-    column-gap:16px;
-    align-content:center;
-    justify-content:center;
-    padding:24px;
-    box-sizing:border-box;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Sidebar card (adds grey bordered column matching stage height) */
-  .sidebar-card{
-    align-self:stretch;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:12px;
-    background: linear-gradient(180deg, #f9f8f5 0%, #fef5f6 100%);
-    border: 1px solid var(--card-border);
-    border-radius: var(--border-radius);
-    box-shadow: 0 6px 18px rgba(16,15,15,0.03);
-    position: relative;
+  .top-left-links {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    display: flex;
+    gap: 24px;
+    z-index: 100;
   }
-  .sidebar-card::before{
-    content:'';
-    position:absolute;
-    inset:8px;
-    border-radius: calc(var(--border-radius) - 6px);
-    border: 1px solid var(--card-border-2);
-    pointer-events:none;
-  }
-  /* Sidebar (left icons) */
-  .sidebar {
-    width:88px;
-    max-width:12vw;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-    align-items:center;
-  }
-  /* Icon rectangle container */
-  .icon-btn {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    border-radius: 12px;
-    background: var(--icon-bg);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
-    transition: box-shadow .18s ease, transform .12s ease, border-color .12s ease;
-    border: 2px solid transparent; /* border becomes red on hover/focus */
+
+  .link-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-white);
+    transition: all 0.2s ease;
     cursor: pointer;
   }
-  .icon-btn:focus { outline: none; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
-  .icon-btn:hover { border-color: var(--icon-hover-border); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
 
-  /* Inline SVG sizing and colorization:
-     - We use 'color' on the container + currentColor in CSS to control stroke/fill.
-     - If your SVG paths use stroke/fill directly, inlining allows these rules to apply.
-  */
-  .icon-btn svg { width: var(--icon-svg-size); height: var(--icon-svg-size); display:block; }
-  /* color for SVG strokes/fills (SVG should use stroke="currentColor" or fill="currentColor" to respond) */
-  .icon-btn { color: #111; } /* black outline by default */
-  .icon-btn:hover { color: #111; } /* we keep icon black on hover; only border changes */
-
-  /* Stage: main rounded card area */
-  .stage {
-    width: clamp(var(--stage-min), 70vw, var(--stage-max));
-    aspect-ratio: 16 / 10;
-    position: relative;
-    border-radius: var(--border-radius);
-    background-color: var(--card-bg);
-    /* Layered background: top = illustration, bottom = subtle vertical gradient */
-    background-image: url('assets/bg-img.png'), linear-gradient(180deg, #f9f8f5 0%, #fef5f6 100%);
-    background-position: center, center;
-    background-repeat: no-repeat, no-repeat;
-    background-size: contain, 100% 100%; /* keep full image visible and centered */
-    justify-self: center; /* center within grid column */
-    padding: var(--stage-padding);
-    box-sizing: border-box;
-    overflow: hidden;
-    border: 1px solid var(--card-border);
-    box-shadow: 0 6px 18px rgba(16,15,15,0.03);
+  .link-item:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.2);
   }
 
-  /* Inner hairline border */
-  .stage::before{
-    content:'';
-    position:absolute;
-    inset:8px;
-    border-radius: calc(var(--border-radius) - 6px);
-    border: 1px solid var(--card-border-2);
-    pointer-events:none;
-  }
-
-  /* Scene videos removed */
-
-  /* CTA button centered below main */
-  .cta {
-    position:absolute;
-    left:50%;
-    transform: translateX(-50%);
-    bottom: calc(8px + 24px);
-    z-index:30;
-    pointer-events: auto; /* allow clicking */
-  }
-  .btn {
-    --brand-red: #FE2034;
-    --brand-red-top: #FF4A59;
-    --brand-red-bottom: #D90F22;
-    font-family: "Sora", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    font-weight: 600;
-    font-size: clamp(9px, 1.6vw, 14px);
-    line-height: 1;
-    height: 50px;
-    min-width: 180px;
-    padding: 0 20px;
-    color:#fff;
-    background: linear-gradient(180deg, var(--brand-red-top) 0%, var(--brand-red) 45%, var(--brand-red-bottom) 100%);
-    border: 0;
+  .link-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    letter-spacing: 0.2px;
-    text-decoration: none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 18px rgba(0,0,0,0.15);
-    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+    box-shadow: var(--glass-shadow);
+  }
+
+  .link-icon svg {
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  }
+
+  .link-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-shadow: var(--text-shadow);
+  }
+
+  .center-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+  }
+
+  .time {
+    font-size: clamp(80px, 12vw, 140px);
+    font-weight: 300;
+    letter-spacing: -2px;
+    text-shadow: var(--text-shadow);
+    margin-bottom: 16px;
+  }
+
+  .greeting {
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 500;
+    text-shadow: var(--text-shadow);
+    margin-bottom: 40px;
+  }
+
+  .main-task-container {
+    margin-top: 24px;
+  }
+
+  .main-task-label {
+    font-size: 18px;
+    font-weight: 500;
+    text-shadow: var(--text-shadow);
+    margin-bottom: 12px;
+  }
+
+  .main-task-input {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 16px 24px;
+    font-size: 20px;
+    color: var(--text-white);
+    text-align: center;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.2s ease;
+  }
+
+  .main-task-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .main-task-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .bottom-right-tasks {
+    position: absolute;
+    bottom: 32px;
+    right: 32px;
+    width: 320px;
+    max-height: 400px;
+    z-index: 100;
+  }
+
+  .tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+
+  .tasks-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: var(--text-shadow);
+  }
+
+  .tasks-list {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--glass-shadow);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.2s ease;
+  }
+
+  .task-item:last-child {
+    border-bottom: none;
+  }
+
+  .task-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .task-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--glass-border);
+    border-radius: 50%;
     cursor: pointer;
-  }
-  .btn:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 12px 24px rgba(0,0,0,0.18); filter: brightness(1.02); }
-  .btn:active { transform: translateY(-1px); box-shadow: inset 0 2px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(0,0,0,0.16); filter: brightness(0.98); }
-  .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(254,32,52,0.28), 0 8px 18px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.35); }
-
-  /* Smaller screens / narrow desktops */
-  @media (max-width:980px){
-    .sidebar-card{display:none;}
-    .stage{aspect-ratio: 16 / 10;}
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    background: transparent;
   }
 
-  /* Reduced motion fallback removed in v2 (no static background). */
+  .task-checkbox:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+  }
 
-  /* small accessibility focus style for icon buttons when tabbed */
-  .icon-btn:focus { box-shadow: 0 0 0 3px rgba(224,42,42,0.12); border-color: var(--icon-hover-border); }
+  .task-checkbox.completed {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    position: relative;
+  }
 
-  @media (prefers-reduced-motion: reduce){
-    .btn { transition: none; }
-    .btn:hover, .btn:active { transform: none; }
+  .task-checkbox.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .task-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-white);
+    text-shadow: var(--text-shadow);
+  }
+
+  .task-text.completed {
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+
+  .task-delete {
+    opacity: 0;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .task-item:hover .task-delete {
+    opacity: 1;
+  }
+
+  .task-delete:hover {
+    color: rgba(255, 100, 100, 0.9);
+  }
+
+  .task-input-container {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .task-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-white);
+    transition: all 0.2s ease;
+  }
+
+  .task-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .task-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .bottom-left-settings {
+    position: absolute;
+    bottom: 32px;
+    left: 32px;
+    z-index: 100;
+  }
+
+  .settings-btn {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text-white);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .settings-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .tasks-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .tasks-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  .tasks-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  .tasks-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .top-left-links {
+      top: 16px;
+      left: 16px;
+      gap: 16px;
+    }
+
+    .link-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .link-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .link-label {
+      font-size: 10px;
+    }
+
+    .bottom-right-tasks {
+      bottom: 16px;
+      right: 16px;
+      width: 280px;
+    }
+
+    .bottom-left-settings {
+      bottom: 16px;
+      left: 16px;
+    }
   }
 
 </style>
 </head>
 <body>
   <div class="app">
-    <!-- Sidebar column with inner icon list -->
-    <div class="sidebar-card" aria-hidden="false">
-      <aside class="sidebar" aria-label="Navigation">
-        <a href="https://www.100school.com/start" class="icon-btn svg-inline" data-src="assets/link-icons/home2.svg" aria-label="Home" title="Home" target="_blank" rel="noopener"></a>
-        <a href="https://narrow-ixora-7de.notion.site/Past-Lessons-27001a1a13458093aa4cf1fbafb0539b" class="icon-btn svg-inline" data-src="assets/link-icons/folder.svg" aria-label="Past Lessons" title="Past Lessons" target="_blank" rel="noopener"></a>
-        <a href="https://100-school.beehiiv.com" class="icon-btn svg-inline" data-src="assets/link-icons/newsletter2.svg" aria-label="Newsletter" title="Newsletter" target="_blank" rel="noopener"></a>
-        <a href="https://narrow-ixora-7de.notion.site/Community-Feed-27001a1a134580228c62f80a5d414ad2" class="icon-btn svg-inline" data-src="assets/link-icons/community2.svg" aria-label="Community" title="Community" target="_blank" rel="noopener"></a>
-        <a href="https://narrow-ixora-7de.notion.site/27201a1a134580cfb70beb186bba6be8?pvs=105" class="icon-btn svg-inline" data-src="assets/link-icons/human2.svg" aria-label="Submit bug" title="Submit bug" target="_blank" rel="noopener"></a>
-      </aside>
+    <div class="top-left-links">
+      <a href="https://www.100school.com/start" class="link-item svg-inline" data-src="assets/link-icons/home2.svg" target="_blank" rel="noopener">
+        <div class="link-icon"></div>
+        <span class="link-label">Home</span>
+      </a>
+      <a href="https://narrow-ixora-7de.notion.site/Past-Lessons-27001a1a13458093aa4cf1fbafb0539b" class="link-item svg-inline" data-src="assets/link-icons/folder.svg" target="_blank" rel="noopener">
+        <div class="link-icon"></div>
+        <span class="link-label">Past Lessons</span>
+      </a>
+      <a href="https://100-school.beehiiv.com" class="link-item svg-inline" data-src="assets/link-icons/newsletter2.svg" target="_blank" rel="noopener">
+        <div class="link-icon"></div>
+        <span class="link-label">Newsletter</span>
+      </a>
+      <a href="https://narrow-ixora-7de.notion.site/Community-Feed-27001a1a134580228c62f80a5d414ad2" class="link-item svg-inline" data-src="assets/link-icons/community2.svg" target="_blank" rel="noopener">
+        <div class="link-icon"></div>
+        <span class="link-label">Community</span>
+      </a>
+      <a href="https://narrow-ixora-7de.notion.site/27201a1a134580cfb70beb186bba6be8?pvs=105" class="link-item svg-inline" data-src="assets/link-icons/human2.svg" target="_blank" rel="noopener">
+        <div class="link-icon"></div>
+        <span class="link-label">Submit Bug</span>
+      </a>
     </div>
 
-    <main class="stage" id="stage" role="main" aria-label="Main new tab content">
-      <div class="cta" role="region" aria-label="Start lesson">
-        <a class="btn" id="start-btn" href="https://learn.100school.com/" target="_blank" rel="noopener">Start Today's Lesson</a>
+    <div class="center-content">
+      <div class="time" id="time">12:00</div>
+      <div class="greeting" id="greeting">Good afternoon</div>
+      <div class="main-task-container">
+        <div class="main-task-label">What is your main goal for today?</div>
+        <input
+          type="text"
+          class="main-task-input"
+          id="main-task"
+          placeholder="Complete Today's Lesson"
+        />
       </div>
-    </main>
+    </div>
+
+    <div class="bottom-right-tasks">
+      <div class="tasks-header">
+        <div class="tasks-title">Tasks</div>
+      </div>
+      <div class="tasks-list" id="tasks-list">
+        <div class="task-input-container">
+          <input
+            type="text"
+            class="task-input"
+            id="new-task-input"
+            placeholder="Add a new task..."
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-left-settings">
+      <button class="settings-btn" id="settings-btn">
+        <span>⚙️</span>
+        <span>Settings</span>
+      </button>
+    </div>
   </div>
 
-  <script src="newtab.js" defer></script>
+  <script type="module" src="newtab.js"></script>
 </body>
 </html>
