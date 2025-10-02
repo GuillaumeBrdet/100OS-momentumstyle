@@ -1,0 +1,18 @@
+{
+  "name": "custom-new-tab-extension",
+  "version": "2.2.0",
+  "description": "A minimal Chrome extension that replaces your default new tab page with the official 100 School OS",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'No build process needed - this is a static Chrome extension'",
+    "dev": "echo 'Load the extension directly in Chrome at chrome://extensions/'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "new-tab",
+    "100-school-os"
+  ],
+  "author": "",
+  "license": "MIT"
+}

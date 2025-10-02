@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>New Tab — 100 School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage-max: 1600px;
+    --stage-min: 720px;
+    --stage-padding: clamp(20px, 4vw, 60px);
+    --border-radius: 18px;
+    --bg: #f9f8f5;
+    --card-bg: #ffffff;
+    --card-border: rgba(16,15,15,0.06);
+    --card-border-2: rgba(16,15,15,0.03);
+    --icon-bg: #FFE9EB;      /* soft-pink rectangle behind icons */
+    --icon-hover-border: #FE2034; /* thin red border on hover */
+    --icon-size: 56px;
+    --icon-svg-size: 28px;
+  }
+
+  html,body{height:100%; margin:0; background:var(--bg); font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+
+  /* Layout */
+  .app {
+    min-height:100vh;
+    display:grid;
+    grid-auto-flow: column;
+    grid-template-columns: auto auto;
+    column-gap:16px;
+    align-content:center;
+    justify-content:center;
+    padding:24px;
+    box-sizing:border-box;
+  }
+
+  /* Sidebar card (adds grey bordered column matching stage height) */
+  .sidebar-card{
+    align-self:stretch;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    background: linear-gradient(180deg, #f9f8f5 0%, #fef5f6 100%);
+    border: 1px solid var(--card-border);
+    border-radius: var(--border-radius);
+    box-shadow: 0 6px 18px rgba(16,15,15,0.03);
+    position: relative;
+  }
+  .sidebar-card::before{
+    content:'';
+    position:absolute;
+    inset:8px;
+    border-radius: calc(var(--border-radius) - 6px);
+    border: 1px solid var(--card-border-2);
+    pointer-events:none;
+  }
+  /* Sidebar (left icons) */
+  .sidebar {
+    width:88px;
+    max-width:12vw;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
+  }
+  /* Icon rectangle container */
+  .icon-btn {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    border-radius: 12px;
+    background: var(--icon-bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    transition: box-shadow .18s ease, transform .12s ease, border-color .12s ease;
+    border: 2px solid transparent; /* border becomes red on hover/focus */
+    cursor: pointer;
+  }
+  .icon-btn:focus { outline: none; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
+  .icon-btn:hover { border-color: var(--icon-hover-border); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.06); }
+
+  /* Inline SVG sizing and colorization:
+     - We use 'color' on the container + currentColor in CSS to control stroke/fill.
+     - If your SVG paths use stroke/fill directly, inlining allows these rules to apply.
+  */
+  .icon-btn svg { width: var(--icon-svg-size); height: var(--icon-svg-size); display:block; }
+  /* color for SVG strokes/fills (SVG should use stroke="currentColor" or fill="currentColor" to respond) */
+  .icon-btn { color: #111; } /* black outline by default */
+  .icon-btn:hover { color: #111; } /* we keep icon black on hover; only border changes */
+
+  /* Stage: main rounded card area */
+  .stage {
+    width: clamp(var(--stage-min), 70vw, var(--stage-max));
+    aspect-ratio: 16 / 10;
+    position: relative;
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    /* Layered background: top = illustration, bottom = subtle vertical gradient */
+    background-image: url('assets/bg-img.png'), linear-gradient(180deg, #f9f8f5 0%, #fef5f6 100%);
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
+    background-size: contain, 100% 100%; /* keep full image visible and centered */
+    justify-self: center; /* center within grid column */
+    padding: var(--stage-padding);
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 6px 18px rgba(16,15,15,0.03);
+  }
+
+  /* Inner hairline border */
+  .stage::before{
+    content:'';
+    position:absolute;
+    inset:8px;
+    border-radius: calc(var(--border-radius) - 6px);
+    border: 1px solid var(--card-border-2);
+    pointer-events:none;
+  }
+
+  /* Scene videos removed */
+
+  /* CTA button centered below main */
+  .cta {
+    position:absolute;
+    left:50%;
+    transform: translateX(-50%);
+    bottom: calc(8px + 24px);
+    z-index:30;
+    pointer-events: auto; /* allow clicking */
+  }
+  .btn {
+    --brand-red: #FE2034;
+    --brand-red-top: #FF4A59;
+    --brand-red-bottom: #D90F22;
+    font-family: "Sora", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    font-weight: 600;
+    font-size: clamp(9px, 1.6vw, 14px);
+    line-height: 1;
+    height: 50px;
+    min-width: 180px;
+    padding: 0 20px;
+    color:#fff;
+    background: linear-gradient(180deg, var(--brand-red-top) 0%, var(--brand-red) 45%, var(--brand-red-bottom) 100%);
+    border: 0;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 18px rgba(0,0,0,0.15);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+    cursor: pointer;
+  }
+  .btn:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 12px 24px rgba(0,0,0,0.18); filter: brightness(1.02); }
+  .btn:active { transform: translateY(-1px); box-shadow: inset 0 2px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(0,0,0,0.16); filter: brightness(0.98); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(254,32,52,0.28), 0 8px 18px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.35); }
+
+  /* Smaller screens / narrow desktops */
+  @media (max-width:980px){
+    .sidebar-card{display:none;}
+    .stage{aspect-ratio: 16 / 10;}
+  }
+
+  /* Reduced motion fallback removed in v2 (no static background). */
+
+  /* small accessibility focus style for icon buttons when tabbed */
+  .icon-btn:focus { box-shadow: 0 0 0 3px rgba(224,42,42,0.12); border-color: var(--icon-hover-border); }
+
+  @media (prefers-reduced-motion: reduce){
+    .btn { transition: none; }
+    .btn:hover, .btn:active { transform: none; }
+  }
+
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar column with inner icon list -->
+    <div class="sidebar-card" aria-hidden="false">
+      <aside class="sidebar" aria-label="Navigation">
+        <a href="https://www.100school.com/start" class="icon-btn svg-inline" data-src="assets/link-icons/home2.svg" aria-label="Home" title="Home" target="_blank" rel="noopener"></a>
+        <a href="https://narrow-ixora-7de.notion.site/Past-Lessons-27001a1a13458093aa4cf1fbafb0539b" class="icon-btn svg-inline" data-src="assets/link-icons/folder.svg" aria-label="Past Lessons" title="Past Lessons" target="_blank" rel="noopener"></a>
+        <a href="https://100-school.beehiiv.com" class="icon-btn svg-inline" data-src="assets/link-icons/newsletter2.svg" aria-label="Newsletter" title="Newsletter" target="_blank" rel="noopener"></a>
+        <a href="https://narrow-ixora-7de.notion.site/Community-Feed-27001a1a134580228c62f80a5d414ad2" class="icon-btn svg-inline" data-src="assets/link-icons/community2.svg" aria-label="Community" title="Community" target="_blank" rel="noopener"></a>
+        <a href="https://narrow-ixora-7de.notion.site/27201a1a134580cfb70beb186bba6be8?pvs=105" class="icon-btn svg-inline" data-src="assets/link-icons/human2.svg" aria-label="Submit bug" title="Submit bug" target="_blank" rel="noopener"></a>
+      </aside>
+    </div>
+
+    <main class="stage" id="stage" role="main" aria-label="Main new tab content">
+      <div class="cta" role="region" aria-label="Start lesson">
+        <a class="btn" id="start-btn" href="https://learn.100school.com/" target="_blank" rel="noopener">Start Today's Lesson</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="newtab.js" defer></script>
+</body>
+</html>
