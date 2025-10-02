@@ -27,10 +27,26 @@
   }
 
   body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1a1a2e;
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 0;
+  }
+
+  body.loaded::before {
+    background: rgba(0, 0, 0, 0.2);
   }
 
   .app {
@@ -39,6 +55,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    z-index: 1;
   }
 
   .top-left-links {
@@ -116,39 +133,67 @@
   }
 
   .main-task-container {
-    margin-top: 24px;
+    margin-top: 32px;
   }
 
-  .main-task-label {
-    font-size: 18px;
-    font-weight: 500;
-    text-shadow: var(--text-shadow);
-    margin-bottom: 12px;
-  }
-
-  .main-task-input {
+  .main-task-wrapper {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border: 2px solid var(--glass-border);
-    border-radius: 8px;
-    padding: 16px 24px;
-    font-size: 20px;
-    color: var(--text-white);
-    text-align: center;
-    width: 500px;
-    max-width: 90vw;
+    border-radius: 12px;
+    padding: 20px 32px;
     box-shadow: var(--glass-shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 400px;
   }
 
-  .main-task-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .main-task-input:focus {
-    outline: none;
-    border-color: rgba(255, 255, 255, 0.4);
+  .main-task-wrapper:hover {
     background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .main-task-checkbox {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--glass-border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    background: transparent;
+    position: relative;
+  }
+
+  .main-task-checkbox.completed {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .main-task-checkbox.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .main-task-text {
+    font-size: 20px;
+    font-weight: 500;
+    text-shadow: var(--text-shadow);
+    flex: 1;
+    text-align: left;
+  }
+
+  .main-task-text.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
   }
 
   .bottom-right-tasks {
@@ -405,13 +450,10 @@
       <div class="time" id="time">12:00</div>
       <div class="greeting" id="greeting">Good afternoon</div>
       <div class="main-task-container">
-        <div class="main-task-label">What is your main goal for today?</div>
-        <input
-          type="text"
-          class="main-task-input"
-          id="main-task"
-          placeholder="Complete Today's Lesson"
-        />
+        <div class="main-task-wrapper" id="main-task-wrapper">
+          <div class="main-task-checkbox" id="main-task-checkbox"></div>
+          <div class="main-task-text" id="main-task-text">Did you complete today's lesson?</div>
+        </div>
       </div>
     </div>
 

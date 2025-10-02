@@ -2,6 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = 'https://vdeuzepsaqplhixnhfok.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkZXV6ZXBzYXFwbGhpeG5oZm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MTc1NjksImV4cCI6MjA3NDk5MzU2OX0.x4Zd7ncK1LJJZkYx8uYwK02Jy1e2UCLoz6RCukeWz3U';
+const UNSPLASH_ACCESS_KEY = 'hNW7fCcfsZNDJ9QFYa_bro9LdQPVksJmKq2R9l3I6tc';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -9,6 +10,43 @@ let userId = localStorage.getItem('userId');
 if (!userId) {
   userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(7);
   localStorage.setItem('userId', userId);
+}
+
+async function loadUnsplashBackground() {
+  try {
+    const cachedImage = localStorage.getItem('unsplashImage');
+    const cachedTime = localStorage.getItem('unsplashImageTime');
+    const now = Date.now();
+
+    if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < 3600000) {
+      document.body.style.backgroundImage = `url(${cachedImage})`;
+      document.body.classList.add('loaded');
+      return;
+    }
+
+    const response = await fetch(
+      `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,peaceful,mountains,ocean&client_id=${UNSPLASH_ACCESS_KEY}`
+    );
+
+    if (!response.ok) throw new Error('Failed to fetch from Unsplash');
+
+    const data = await response.json();
+    const imageUrl = data.urls.regular;
+
+    const img = new Image();
+    img.onload = () => {
+      document.body.style.backgroundImage = `url(${imageUrl})`;
+      document.body.classList.add('loaded');
+      localStorage.setItem('unsplashImage', imageUrl);
+      localStorage.setItem('unsplashImageTime', now.toString());
+    };
+    img.src = imageUrl;
+
+  } catch (err) {
+    console.error('Failed to load Unsplash background:', err);
+    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    document.body.classList.add('loaded');
+  }
 }
 
 async function inlineSvgs() {
@@ -22,6 +60,19 @@ async function inlineSvgs() {
       const iconContainer = node.querySelector('.link-icon');
       if (iconContainer) {
         iconContainer.innerHTML = text;
+        const svgs = iconContainer.querySelectorAll('svg');
+        svgs.forEach(svg => {
+          svg.style.width = '100%';
+          svg.style.height = '100%';
+          svg.querySelectorAll('path, circle, rect, line, polyline, polygon').forEach(el => {
+            if (!el.getAttribute('fill') || el.getAttribute('fill') === 'black' || el.getAttribute('fill') === '#000') {
+              el.setAttribute('fill', 'white');
+            }
+            if (!el.getAttribute('stroke') || el.getAttribute('stroke') === 'black' || el.getAttribute('stroke') === '#000') {
+              el.setAttribute('stroke', 'white');
+            }
+          });
+        });
       }
       node.querySelectorAll('[tabindex]').forEach(el => el.removeAttribute('tabindex'));
     } catch (err) {
@@ -47,19 +98,28 @@ function updateTime() {
 }
 
 async function loadMainTask() {
-  const mainTaskInput = document.getElementById('main-task');
-  const savedTask = localStorage.getItem('mainTask');
-  if (savedTask) {
-    mainTaskInput.value = savedTask;
+  const mainTaskWrapper = document.getElementById('main-task-wrapper');
+  const mainTaskCheckbox = document.getElementById('main-task-checkbox');
+  const mainTaskText = document.getElementById('main-task-text');
+
+  const savedCompleted = localStorage.getItem('mainTaskCompleted') === 'true';
+
+  if (savedCompleted) {
+    mainTaskCheckbox.classList.add('completed');
+    mainTaskText.classList.add('completed');
   }
 
-  mainTaskInput.addEventListener('input', () => {
-    localStorage.setItem('mainTask', mainTaskInput.value);
-  });
+  mainTaskWrapper.addEventListener('click', () => {
+    const isCompleted = mainTaskCheckbox.classList.contains('completed');
 
-  mainTaskInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      mainTaskInput.blur();
+    if (isCompleted) {
+      mainTaskCheckbox.classList.remove('completed');
+      mainTaskText.classList.remove('completed');
+      localStorage.setItem('mainTaskCompleted', 'false');
+    } else {
+      mainTaskCheckbox.classList.add('completed');
+      mainTaskText.classList.add('completed');
+      localStorage.setItem('mainTaskCompleted', 'true');
     }
   });
 }
@@ -104,7 +164,10 @@ function createTaskElement(task) {
 
   const checkbox = document.createElement('div');
   checkbox.className = `task-checkbox ${task.completed ? 'completed' : ''}`;
-  checkbox.addEventListener('click', () => toggleTask(task.id, !task.completed));
+  checkbox.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleTask(task.id, !task.completed);
+  });
 
   const taskText = document.createElement('div');
   taskText.className = `task-text ${task.completed ? 'completed' : ''}`;
@@ -113,7 +176,10 @@ function createTaskElement(task) {
   const deleteBtn = document.createElement('div');
   deleteBtn.className = 'task-delete';
   deleteBtn.textContent = '\u00d7';
-  deleteBtn.addEventListener('click', () => deleteTask(task.id));
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteTask(task.id);
+  });
 
   taskItem.appendChild(checkbox);
   taskItem.appendChild(taskText);
@@ -199,7 +265,7 @@ function setupTaskInput() {
   const taskInput = document.getElementById('new-task-input');
 
   taskInput.addEventListener('keypress', async (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && taskInput.value.trim()) {
       await addTask(taskInput.value);
       taskInput.value = '';
     }
@@ -209,11 +275,12 @@ function setupTaskInput() {
 function setupSettingsButton() {
   const settingsBtn = document.getElementById('settings-btn');
   settingsBtn.addEventListener('click', () => {
-    console.log('Settings clicked - functionality coming soon');
+    alert('Settings functionality coming soon!');
   });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  loadUnsplashBackground();
   await inlineSvgs();
   updateTime();
   setInterval(updateTime, 1000);

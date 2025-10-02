@@ -23,10 +23,12 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://vdeuzepsaqplhixnhfok.supabase.co/*",
-    "https://cdn.jsdelivr.net/*"
+    "https://cdn.jsdelivr.net/*",
+    "https://api.unsplash.com/*",
+    "https://images.unsplash.com/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src https://vdeuzepsaqplhixnhfok.supabase.co https://cdn.jsdelivr.net;"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src https://vdeuzepsaqplhixnhfok.supabase.co https://cdn.jsdelivr.net https://api.unsplash.com https://images.unsplash.com; img-src 'self' https://images.unsplash.com data:;"
   },
   
   "homepage_url": "https://www.100school.com/privacy-policy"
