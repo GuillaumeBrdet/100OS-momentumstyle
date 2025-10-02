@@ -16,48 +16,53 @@ async function loadUnsplashBackground() {
   const cachedImage = localStorage.getItem('unsplashImage');
   const cachedTime = localStorage.getItem('unsplashImageTime');
   const now = Date.now();
+  const cacheExpiry = 3600000;
 
-  if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < 3600000) {
-    document.body.style.backgroundImage = `url(${cachedImage})`;
-    document.body.classList.add('loaded');
-    console.log('Using cached Unsplash image');
+  if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < cacheExpiry) {
+    console.log('Using cached Unsplash image:', cachedImage);
+    applyBackground(cachedImage);
     return;
   }
 
+  console.log('Fetching new Unsplash image from API...');
+
   try {
-    console.log('Fetching new Unsplash image...');
-    const response = await fetch(
-      `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,peaceful,mountains,ocean,landscape&client_id=${UNSPLASH_ACCESS_KEY}`
-    );
+    const apiUrl = `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,mountains,ocean,landscape,forest&client_id=${UNSPLASH_ACCESS_KEY}`;
+    console.log('API URL:', apiUrl);
+
+    const response = await fetch(apiUrl);
+    console.log('Response status:', response.status);
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Unsplash API error:', response.status, errorText);
       throw new Error(`Unsplash API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Unsplash API response received');
+
     const imageUrl = data.urls.regular;
+    console.log('Image URL to load:', imageUrl);
 
-    console.log('Unsplash image URL:', imageUrl);
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      console.log('Unsplash image loaded successfully');
-      document.body.style.backgroundImage = `url(${imageUrl})`;
-      document.body.classList.add('loaded');
-      localStorage.setItem('unsplashImage', imageUrl);
-      localStorage.setItem('unsplashImageTime', now.toString());
-    };
-    img.onerror = (err) => {
-      console.error('Failed to load Unsplash image:', err);
-      setFallbackBackground();
-    };
-    img.src = imageUrl;
+    applyBackground(imageUrl);
+    localStorage.setItem('unsplashImage', imageUrl);
+    localStorage.setItem('unsplashImageTime', now.toString());
+    console.log('Unsplash image cached successfully');
 
   } catch (err) {
     console.error('Failed to fetch from Unsplash:', err);
     setFallbackBackground();
   }
+}
+
+function applyBackground(imageUrl) {
+  console.log('Applying background image:', imageUrl);
+  document.body.style.backgroundImage = `url("${imageUrl}")`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundRepeat = 'no-repeat';
+  document.body.classList.add('loaded');
 }
 
 function setFallbackBackground() {
@@ -323,8 +328,14 @@ function setupSettingsButton() {
     const themeName = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
     const nextTheme = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
 
-    if (confirm(`Current theme: ${themeName}\n\nSwitch to ${nextTheme}?`)) {
+    const choice = confirm(`Current theme: ${themeName}\n\nOptions:\n- Click OK to switch to ${nextTheme}\n- Click Cancel to refresh background image`);
+
+    if (choice) {
       toggleTheme();
+    } else {
+      localStorage.removeItem('unsplashImage');
+      localStorage.removeItem('unsplashImageTime');
+      loadUnsplashBackground();
     }
   });
 }
