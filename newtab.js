@@ -12,73 +12,75 @@ if (!userId) {
   localStorage.setItem('userId', userId);
 }
 
+console.log('=== NEW TAB LOADED ===');
+console.log('User ID:', userId);
+
 async function loadUnsplashBackground() {
+  console.log('>>> Starting loadUnsplashBackground');
+
+  const now = Date.now();
   const cachedImage = localStorage.getItem('unsplashImage');
   const cachedTime = localStorage.getItem('unsplashImageTime');
-  const now = Date.now();
   const cacheExpiry = 3600000;
 
   if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < cacheExpiry) {
-    console.log('Using cached Unsplash image:', cachedImage);
-    applyBackground(cachedImage);
+    console.log('>>> Using cached image:', cachedImage);
+    document.body.style.backgroundImage = `url("${cachedImage}")`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.classList.add('loaded');
     return;
   }
 
-  console.log('Fetching new Unsplash image from API...');
+  console.log('>>> Cache expired or not found, fetching from Unsplash API');
 
   try {
-    const apiUrl = `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,mountains,ocean,landscape,forest&client_id=${UNSPLASH_ACCESS_KEY}`;
-    console.log('API URL:', apiUrl);
+    const apiUrl = `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,mountains,ocean,landscape&client_id=${UNSPLASH_ACCESS_KEY}`;
+    console.log('>>> Fetching:', apiUrl.substring(0, 100) + '...');
 
     const response = await fetch(apiUrl);
-    console.log('Response status:', response.status);
+    console.log('>>> Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Unsplash API error:', response.status, errorText);
-      throw new Error(`Unsplash API error: ${response.status}`);
+      console.error('>>> Unsplash API error:', errorText);
+      throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Unsplash API response received');
+    console.log('>>> Unsplash response data:', { id: data.id, urls: data.urls });
 
     const imageUrl = data.urls.regular;
-    console.log('Image URL to load:', imageUrl);
+    console.log('>>> Applying background:', imageUrl);
 
-    applyBackground(imageUrl);
+    document.body.style.backgroundImage = `url("${imageUrl}")`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.classList.add('loaded');
+
     localStorage.setItem('unsplashImage', imageUrl);
     localStorage.setItem('unsplashImageTime', now.toString());
-    console.log('Unsplash image cached successfully');
+    console.log('>>> Background applied and cached successfully!');
 
   } catch (err) {
-    console.error('Failed to fetch from Unsplash:', err);
-    setFallbackBackground();
+    console.error('>>> Failed to load Unsplash:', err);
+    console.log('>>> Using fallback gradient');
+    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    document.body.style.backgroundSize = 'cover';
+    document.body.classList.add('loaded');
   }
 }
 
-function applyBackground(imageUrl) {
-  console.log('Applying background image:', imageUrl);
-  document.body.style.backgroundImage = `url("${imageUrl}")`;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
-  document.body.style.backgroundRepeat = 'no-repeat';
-  document.body.classList.add('loaded');
-}
-
-function setFallbackBackground() {
-  console.log('Using fallback gradient background');
-  document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  document.body.classList.add('loaded');
-}
-
 async function inlineSvgs() {
+  console.log('>>> Loading SVG icons');
   const nodes = document.querySelectorAll('.svg-inline[data-src]');
-  console.log('Found', nodes.length, 'SVG elements to inline');
+  console.log('>>> Found', nodes.length, 'SVG elements');
 
   for (const node of nodes) {
     const url = node.dataset.src;
     try {
-      console.log('Loading SVG:', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error('Fetch failed ' + url);
       const text = await res.text();
@@ -95,10 +97,10 @@ async function inlineSvgs() {
             el.setAttribute('stroke', 'white');
           });
         });
-        console.log('SVG loaded successfully:', url);
+        console.log('>>> Loaded SVG:', url);
       }
     } catch (err) {
-      console.error('Failed to inline SVG', url, err);
+      console.error('>>> Failed to load SVG', url, err);
     }
   }
 }
@@ -148,7 +150,7 @@ async function loadMainTask() {
 
 async function loadTasks() {
   try {
-    console.log('Loading tasks for user:', userId);
+    console.log('>>> Loading tasks for user:', userId);
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
@@ -156,14 +158,14 @@ async function loadTasks() {
       .order('position', { ascending: true });
 
     if (error) {
-      console.error('Error loading tasks:', error);
+      console.error('>>> Error loading tasks:', error);
       return;
     }
 
-    console.log('Tasks loaded:', data);
+    console.log('>>> Tasks loaded:', data.length, 'tasks');
     renderTasks(data || []);
   } catch (err) {
-    console.error('Failed to load tasks:', err);
+    console.error('>>> Failed to load tasks:', err);
   }
 }
 
@@ -192,7 +194,6 @@ function createTaskElement(task) {
   checkbox.className = `task-checkbox ${task.completed ? 'completed' : ''}`;
   checkbox.addEventListener('click', (e) => {
     e.stopPropagation();
-    console.log('Toggling task:', task.id);
     toggleTask(task.id, !task.completed);
   });
 
@@ -205,7 +206,6 @@ function createTaskElement(task) {
   deleteBtn.textContent = '\u00d7';
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    console.log('Deleting task:', task.id);
     deleteTask(task.id);
   });
 
@@ -220,7 +220,7 @@ async function addTask(text) {
   if (!text.trim()) return;
 
   try {
-    console.log('Adding task:', text);
+    console.log('>>> Adding task:', text);
     const { data: existingTasks } = await supabase
       .from('tasks')
       .select('position')
@@ -243,20 +243,20 @@ async function addTask(text) {
       .select();
 
     if (error) {
-      console.error('Error adding task:', error);
+      console.error('>>> Error adding task:', error);
       return;
     }
 
-    console.log('Task added successfully:', data);
+    console.log('>>> Task added successfully');
     await loadTasks();
   } catch (err) {
-    console.error('Failed to add task:', err);
+    console.error('>>> Failed to add task:', err);
   }
 }
 
 async function toggleTask(taskId, completed) {
   try {
-    console.log('Toggling task:', taskId, 'to', completed);
+    console.log('>>> Toggling task:', taskId, 'to', completed);
     const { data, error } = await supabase
       .from('tasks')
       .update({ completed })
@@ -264,34 +264,34 @@ async function toggleTask(taskId, completed) {
       .select();
 
     if (error) {
-      console.error('Error toggling task:', error);
+      console.error('>>> Error toggling task:', error);
       return;
     }
 
-    console.log('Task toggled successfully:', data);
+    console.log('>>> Task toggled successfully');
     await loadTasks();
   } catch (err) {
-    console.error('Failed to toggle task:', err);
+    console.error('>>> Failed to toggle task:', err);
   }
 }
 
 async function deleteTask(taskId) {
   try {
-    console.log('Deleting task:', taskId);
+    console.log('>>> Deleting task:', taskId);
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', taskId);
 
     if (error) {
-      console.error('Error deleting task:', error);
+      console.error('>>> Error deleting task:', error);
       return;
     }
 
-    console.log('Task deleted successfully');
+    console.log('>>> Task deleted successfully');
     await loadTasks();
   } catch (err) {
-    console.error('Failed to delete task:', err);
+    console.error('>>> Failed to delete task:', err);
   }
 }
 
@@ -300,7 +300,6 @@ function setupTaskInput() {
 
   taskInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && taskInput.value.trim()) {
-      console.log('Adding task from input:', taskInput.value);
       await addTask(taskInput.value);
       taskInput.value = '';
     }
@@ -310,6 +309,7 @@ function setupTaskInput() {
 function loadTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.body.setAttribute('data-theme', savedTheme);
+  console.log('>>> Theme loaded:', savedTheme);
   return savedTheme;
 }
 
@@ -318,7 +318,7 @@ function toggleTheme() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   document.body.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
-  console.log('Theme changed to:', newTheme);
+  console.log('>>> Theme changed to:', newTheme);
 }
 
 function setupSettingsButton() {
@@ -333,6 +333,7 @@ function setupSettingsButton() {
     if (choice) {
       toggleTheme();
     } else {
+      console.log('>>> Forcing background refresh');
       localStorage.removeItem('unsplashImage');
       localStorage.removeItem('unsplashImageTime');
       loadUnsplashBackground();
@@ -341,7 +342,7 @@ function setupSettingsButton() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Extension loaded, userId:', userId);
+  console.log('>>> DOM loaded, initializing...');
 
   loadTheme();
   loadUnsplashBackground();
@@ -354,5 +355,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTaskInput();
   setupSettingsButton();
 
-  console.log('All initialization complete');
+  console.log('>>> All initialization complete!');
 });
