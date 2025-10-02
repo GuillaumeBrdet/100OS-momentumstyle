@@ -49,6 +49,61 @@
     background: rgba(0, 0, 0, 0.2);
   }
 
+  body[data-theme="light"]::before {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  body[data-theme="light"] {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  body[data-theme="light"] .time,
+  body[data-theme="light"] .greeting,
+  body[data-theme="light"] .main-task-text,
+  body[data-theme="light"] .link-label,
+  body[data-theme="light"] .tasks-title,
+  body[data-theme="light"] .task-text {
+    color: rgba(0, 0, 0, 0.9);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  body[data-theme="light"] .link-icon svg path,
+  body[data-theme="light"] .link-icon svg circle,
+  body[data-theme="light"] .link-icon svg rect,
+  body[data-theme="light"] .link-icon svg line,
+  body[data-theme="light"] .link-icon svg polyline,
+  body[data-theme="light"] .link-icon svg polygon {
+    fill: rgba(0, 0, 0, 0.8) !important;
+    stroke: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  body[data-theme="light"] .glass-bg,
+  body[data-theme="light"] .link-icon,
+  body[data-theme="light"] .main-task-wrapper,
+  body[data-theme="light"] .tasks-list,
+  body[data-theme="light"] .settings-btn {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  body[data-theme="light"] .task-input {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  body[data-theme="light"] .task-input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  body[data-theme="light"] .task-checkbox {
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+
+  body[data-theme="light"] .main-task-checkbox {
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+
   .app {
     width: 100vw;
     height: 100vh;

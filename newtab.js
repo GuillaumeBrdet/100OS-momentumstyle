@@ -13,47 +13,67 @@ if (!userId) {
 }
 
 async function loadUnsplashBackground() {
+  const cachedImage = localStorage.getItem('unsplashImage');
+  const cachedTime = localStorage.getItem('unsplashImageTime');
+  const now = Date.now();
+
+  if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < 3600000) {
+    document.body.style.backgroundImage = `url(${cachedImage})`;
+    document.body.classList.add('loaded');
+    console.log('Using cached Unsplash image');
+    return;
+  }
+
   try {
-    const cachedImage = localStorage.getItem('unsplashImage');
-    const cachedTime = localStorage.getItem('unsplashImageTime');
-    const now = Date.now();
-
-    if (cachedImage && cachedTime && (now - parseInt(cachedTime)) < 3600000) {
-      document.body.style.backgroundImage = `url(${cachedImage})`;
-      document.body.classList.add('loaded');
-      return;
-    }
-
+    console.log('Fetching new Unsplash image...');
     const response = await fetch(
-      `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,peaceful,mountains,ocean&client_id=${UNSPLASH_ACCESS_KEY}`
+      `https://api.unsplash.com/photos/random?orientation=landscape&query=nature,peaceful,mountains,ocean,landscape&client_id=${UNSPLASH_ACCESS_KEY}`
     );
 
-    if (!response.ok) throw new Error('Failed to fetch from Unsplash');
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status}`);
+    }
 
     const data = await response.json();
     const imageUrl = data.urls.regular;
 
+    console.log('Unsplash image URL:', imageUrl);
+
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
+      console.log('Unsplash image loaded successfully');
       document.body.style.backgroundImage = `url(${imageUrl})`;
       document.body.classList.add('loaded');
       localStorage.setItem('unsplashImage', imageUrl);
       localStorage.setItem('unsplashImageTime', now.toString());
     };
+    img.onerror = (err) => {
+      console.error('Failed to load Unsplash image:', err);
+      setFallbackBackground();
+    };
     img.src = imageUrl;
 
   } catch (err) {
-    console.error('Failed to load Unsplash background:', err);
-    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    document.body.classList.add('loaded');
+    console.error('Failed to fetch from Unsplash:', err);
+    setFallbackBackground();
   }
+}
+
+function setFallbackBackground() {
+  console.log('Using fallback gradient background');
+  document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  document.body.classList.add('loaded');
 }
 
 async function inlineSvgs() {
   const nodes = document.querySelectorAll('.svg-inline[data-src]');
-  await Promise.all(Array.from(nodes).map(async node => {
+  console.log('Found', nodes.length, 'SVG elements to inline');
+
+  for (const node of nodes) {
     const url = node.dataset.src;
     try {
+      console.log('Loading SVG:', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error('Fetch failed ' + url);
       const text = await res.text();
@@ -62,23 +82,20 @@ async function inlineSvgs() {
         iconContainer.innerHTML = text;
         const svgs = iconContainer.querySelectorAll('svg');
         svgs.forEach(svg => {
-          svg.style.width = '100%';
-          svg.style.height = '100%';
+          svg.style.width = '20px';
+          svg.style.height = '20px';
+          svg.style.display = 'block';
           svg.querySelectorAll('path, circle, rect, line, polyline, polygon').forEach(el => {
-            if (!el.getAttribute('fill') || el.getAttribute('fill') === 'black' || el.getAttribute('fill') === '#000') {
-              el.setAttribute('fill', 'white');
-            }
-            if (!el.getAttribute('stroke') || el.getAttribute('stroke') === 'black' || el.getAttribute('stroke') === '#000') {
-              el.setAttribute('stroke', 'white');
-            }
+            el.setAttribute('fill', 'white');
+            el.setAttribute('stroke', 'white');
           });
         });
+        console.log('SVG loaded successfully:', url);
       }
-      node.querySelectorAll('[tabindex]').forEach(el => el.removeAttribute('tabindex'));
     } catch (err) {
       console.error('Failed to inline SVG', url, err);
     }
-  }));
+  }
 }
 
 function updateTime() {
@@ -126,6 +143,7 @@ async function loadMainTask() {
 
 async function loadTasks() {
   try {
+    console.log('Loading tasks for user:', userId);
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
@@ -137,6 +155,7 @@ async function loadTasks() {
       return;
     }
 
+    console.log('Tasks loaded:', data);
     renderTasks(data || []);
   } catch (err) {
     console.error('Failed to load tasks:', err);
@@ -145,7 +164,7 @@ async function loadTasks() {
 
 function renderTasks(tasks) {
   const tasksList = document.getElementById('tasks-list');
-  const inputContainer = tasksList.querySelector('.task-input-container');
+  const existingInput = tasksList.querySelector('.task-input-container');
 
   tasksList.innerHTML = '';
 
@@ -154,7 +173,9 @@ function renderTasks(tasks) {
     tasksList.appendChild(taskItem);
   });
 
-  tasksList.appendChild(inputContainer);
+  if (existingInput) {
+    tasksList.appendChild(existingInput);
+  }
 }
 
 function createTaskElement(task) {
@@ -166,6 +187,7 @@ function createTaskElement(task) {
   checkbox.className = `task-checkbox ${task.completed ? 'completed' : ''}`;
   checkbox.addEventListener('click', (e) => {
     e.stopPropagation();
+    console.log('Toggling task:', task.id);
     toggleTask(task.id, !task.completed);
   });
 
@@ -178,6 +200,7 @@ function createTaskElement(task) {
   deleteBtn.textContent = '\u00d7';
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    console.log('Deleting task:', task.id);
     deleteTask(task.id);
   });
 
@@ -192,6 +215,7 @@ async function addTask(text) {
   if (!text.trim()) return;
 
   try {
+    console.log('Adding task:', text);
     const { data: existingTasks } = await supabase
       .from('tasks')
       .select('position')
@@ -203,20 +227,22 @@ async function addTask(text) {
       ? existingTasks[0].position + 1
       : 0;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .insert([{
         text: text.trim(),
         user_id: userId,
         position: newPosition,
         completed: false
-      }]);
+      }])
+      .select();
 
     if (error) {
       console.error('Error adding task:', error);
       return;
     }
 
+    console.log('Task added successfully:', data);
     await loadTasks();
   } catch (err) {
     console.error('Failed to add task:', err);
@@ -225,17 +251,19 @@ async function addTask(text) {
 
 async function toggleTask(taskId, completed) {
   try {
-    const { error } = await supabase
+    console.log('Toggling task:', taskId, 'to', completed);
+    const { data, error } = await supabase
       .from('tasks')
       .update({ completed })
       .eq('id', taskId)
-      .eq('user_id', userId);
+      .select();
 
     if (error) {
       console.error('Error toggling task:', error);
       return;
     }
 
+    console.log('Task toggled successfully:', data);
     await loadTasks();
   } catch (err) {
     console.error('Failed to toggle task:', err);
@@ -244,17 +272,18 @@ async function toggleTask(taskId, completed) {
 
 async function deleteTask(taskId) {
   try {
+    console.log('Deleting task:', taskId);
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', taskId)
-      .eq('user_id', userId);
+      .eq('id', taskId);
 
     if (error) {
       console.error('Error deleting task:', error);
       return;
     }
 
+    console.log('Task deleted successfully');
     await loadTasks();
   } catch (err) {
     console.error('Failed to delete task:', err);
@@ -266,20 +295,44 @@ function setupTaskInput() {
 
   taskInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && taskInput.value.trim()) {
+      console.log('Adding task from input:', taskInput.value);
       await addTask(taskInput.value);
       taskInput.value = '';
     }
   });
 }
 
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.body.setAttribute('data-theme', savedTheme);
+  return savedTheme;
+}
+
+function toggleTheme() {
+  const currentTheme = document.body.getAttribute('data-theme') || 'dark';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  console.log('Theme changed to:', newTheme);
+}
+
 function setupSettingsButton() {
   const settingsBtn = document.getElementById('settings-btn');
   settingsBtn.addEventListener('click', () => {
-    alert('Settings functionality coming soon!');
+    const currentTheme = document.body.getAttribute('data-theme') || 'dark';
+    const themeName = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+    const nextTheme = currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+
+    if (confirm(`Current theme: ${themeName}\n\nSwitch to ${nextTheme}?`)) {
+      toggleTheme();
+    }
   });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('Extension loaded, userId:', userId);
+
+  loadTheme();
   loadUnsplashBackground();
   await inlineSvgs();
   updateTime();
@@ -289,4 +342,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTasks();
   setupTaskInput();
   setupSettingsButton();
+
+  console.log('All initialization complete');
 });
